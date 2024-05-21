@@ -2,7 +2,7 @@
 
 ## Collaborators
 
-Krista Nichols
+Krista Nichols, Jessica Blow, and me
 
 # Disclaimer
 
