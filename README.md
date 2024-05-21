@@ -3,6 +3,8 @@
 ## Collaborators
 
 Krista Nichols
+Giles Goetz
+Kyle O'Connell
 
 # Disclaimer
 
