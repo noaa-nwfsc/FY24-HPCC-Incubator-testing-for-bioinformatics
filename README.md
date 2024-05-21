@@ -2,7 +2,9 @@
 
 ## Collaborators
 
-Krista Nichols, Jessica Blow, and me
+* Krista Nichols
+* Giles Goetz
+* Kyle O'Connell
 
 # Disclaimer
 
