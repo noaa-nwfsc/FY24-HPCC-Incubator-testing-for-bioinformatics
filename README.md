@@ -20,7 +20,7 @@ Detailed documentation of required storage space, processing power, and time spe
 
 ## Project Repositories
 
-| Repository     | Cloud testing code   |  Description          | Data input(s) | Contact author(s)  | 
+| Repository     | Cloud & on premise testing code   |  Description          | Data input(s) | Contact author(s)  | 
 |---------|---------|---------|---------|---------|
 | [mega-non-model-wgs-snakeflow](https://github.com/eriqande/mega-non-model-wgs-snakeflow) | | With low coverage whole genome sequence data from multiple individuals, performs genome alignment through variant calling. | WGS data, in this example from ~30 rockfish samples | @eriqande |
 | | | | | |
