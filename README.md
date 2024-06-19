@@ -8,6 +8,7 @@
 * Ramiya Sivakumar
 * Eric Anderson
 * Luke Thompson
+* Rachael Storo
 
 ## OVERVIEW
 This project was funded in FY23 by the [NOAA High Performance Computing and Communications (HPCC)  Program](https://www.noaa.gov/information-technology/hpcc) to test the feasibility, cost, and efficiency of conducting bioinformatics in the cloud. 
@@ -16,15 +17,15 @@ This project was funded in FY23 by the [NOAA High Performance Computing and Comm
 With the [NOAA ‘Omics Strategic Plan](https://sciencecouncil.noaa.gov/wp-content/uploads/2022/08/Omics-Strategic-Plan_Final-Signed.pdf), the generation and analysis of large molecular (DNA, RNA) and chemical (metabolites, proteins) data is recognized as a NOAA mission priority. These types of data are rapidly advancing the field of fisheries and biological oceanography and are a crucial component of systems-level understanding of marine habitats, species diversity, and population dynamics. ‘Omics data sets consist of large raw and processed data files that require substantial storage space and computational processing power. Importantly, the requirements for ‘Omics workflows are distinct from those of mathematical simulations such as weather modeling. ‘Omics computational resources ideally have a flexible architecture that can accommodate both highly-parallel, low-memory processes as well as low-node count, high memory processes. Local on-premise servers built for bioinformatics demands have been important upgrades in NOAA computational capacity, but as ‘Omics projects expand in scope, individual servers may not meet the expanding scientific needs. Cloud computing could overcome resource challenges and represents a potential long-term solution to meet some of the scientific needs defined in the ‘Omics Strategic Plan. 
 This project will tested the feasibility of running ‘Omics analyses in a cloud environment, and compared the cost and effort with those of on-premise HPC. ‘Omics bioinformatic workflows were conducted in parallel (i.e, in the cloud and on-premise), representing major areas of NOAA ‘Omics research: (1) DNA metabarcoding, (2) shotgun metagenome-assembled genome (MAG) binning, (3) transcriptome assembly and annotation, and (4) whole genome assembly, alignment, and variant calling. 
 
-Detailed documentation of required storage space, processing power, and time spent on installation and troubleshooting will provide a roadmap for evaluating cloud vs. on-premise computing, which in the long-term plan will identify the most effective means for storage and analysis of ‘Omics datasets. The final report from this project may be found here, and repositories used for analyses are linked below.
+Detailed documentation of required storage space, processing power, and time spent on installation and troubleshooting will provide a roadmap for evaluating cloud vs. on-premise computing, which in the long-term plan will identify the most effective means for storage and analysis of ‘Omics datasets. The final report from this project may be found **here**, and repositories used for analyses are linked below.
 
 ## Project Repositories
 
-| Repository     | Cloud & on premise testing code   |  Description          | Data input(s) | Contact author(s)  | 
+| Source Repository     | Cloud & on premise testing code   |  Description          | Data input(s) | Contact author(s)  | 
 |---------|---------|---------|---------|---------|
-| [mega-non-model-wgs-snakeflow](https://github.com/eriqande/mega-non-model-wgs-snakeflow) | | With low coverage whole genome sequence data from multiple individuals, performs genome alignment through variant calling. | WGS data, in this example from ~30 rockfish samples | @eriqande |
-| | | | | |
-| | | | | |
+| [mega-non-model-wgs-snakeflow](https://github.com/eriqande/mega-non-model-wgs-snakeflow) | [cloud](/GoogleCloud/mega-non-model-wgs-snakeflow) and [on prem](/sedna/mega-non-wgs-snakeflow) | With low coverage whole genome sequence data from multiple individuals, performs genome alignment through variant calling. | WGS data, in this example from 43 rockfish samples | @eriqande |
+| [Tourmaline](https://github.com/aomlomics/tourmaline)| [cloud](/GoogleCloud/tourmaline) and [on prem](/sedna/tourmaline) | Workflow to conduct DNA metabarcoding with Illumina sequencing amplicon data using Qiime2 | | DNA metabarcoding data from 1014 eDNA collected from the Gulf of Alaska (GoA) amplified using 12S rRNA targeted Illumina short read sequencing, n = 1014 |
+| [Amethyst](https://github.com/aomlomics/amethyst)| | | | |
 | | | | | |
 
 
