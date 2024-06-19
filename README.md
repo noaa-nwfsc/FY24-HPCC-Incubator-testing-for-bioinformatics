@@ -11,7 +11,7 @@
 * Rachael Storo
 
 ## OVERVIEW
-This project was funded in FY23 by the [NOAA High Performance Computing and Communications (HPCC)  Program](https://www.noaa.gov/information-technology/hpcc) to test the feasibility, cost, and efficiency of conducting bioinformatics in the cloud. 
+This project was funded in FY23 by the [NOAA High Performance Computing and Communications (HPCC) Program](https://www.noaa.gov/information-technology/hpcc) to test the feasibility, cost, and efficiency of conducting bioinformatics in the cloud. 
 
 ## Introduction & objectives
 With the [NOAA ‘Omics Strategic Plan](https://sciencecouncil.noaa.gov/wp-content/uploads/2022/08/Omics-Strategic-Plan_Final-Signed.pdf), the generation and analysis of large molecular (DNA, RNA) and chemical (metabolites, proteins) data is recognized as a NOAA mission priority. These types of data are rapidly advancing the field of fisheries and biological oceanography and are a crucial component of systems-level understanding of marine habitats, species diversity, and population dynamics. ‘Omics data sets consist of large raw and processed data files that require substantial storage space and computational processing power. Importantly, the requirements for ‘Omics workflows are distinct from those of mathematical simulations such as weather modeling. ‘Omics computational resources ideally have a flexible architecture that can accommodate both highly-parallel, low-memory processes as well as low-node count, high memory processes. Local on-premise servers built for bioinformatics demands have been important upgrades in NOAA computational capacity, but as ‘Omics projects expand in scope, individual servers may not meet the expanding scientific needs. Cloud computing could overcome resource challenges and represents a potential long-term solution to meet some of the scientific needs defined in the ‘Omics Strategic Plan. 
@@ -23,10 +23,10 @@ Detailed documentation of required storage space, processing power, and time spe
 
 | Source Repository     | Cloud & on premise testing code   |  Description          | Data input(s) | Contact author(s)  | 
 |---------|---------|---------|---------|---------|
-| [mega-non-model-wgs-snakeflow](https://github.com/eriqande/mega-non-model-wgs-snakeflow) | [cloud](/GoogleCloud/mega-non-model-wgs-snakeflow) and [on prem](/sedna/mega-non-wgs-snakeflow) | With low coverage whole genome sequence data from multiple individuals, performs genome alignment through variant calling. | WGS data, in this example from 43 rockfish samples | @eriqande |
-| [Tourmaline](https://github.com/aomlomics/tourmaline)| [cloud](/GoogleCloud/tourmaline) and [on prem](/sedna/tourmaline) | Workflow to conduct DNA metabarcoding with Illumina sequencing amplicon data using Qiime2 | | DNA metabarcoding data from 1014 eDNA collected from the Gulf of Alaska (GoA) amplified using 12S rRNA targeted Illumina short read sequencing, n = 1014 |
-| [Amethyst](https://github.com/aomlomics/amethyst)| | | | |
-| | | | | |
+| [mega-non-model-wgs-snakeflow](https://github.com/eriqande/mega-non-model-wgs-snakeflow) | [cloud](/GoogleCloud/mega-non-model-wgs-snakeflow) and [on prem](/sedna/mega-non-wgs-snakeflow) | With low coverage whole genome sequence data from multiple individuals, performs genome alignment through variant calling. | WGS data, in this example from 43 rockfish samples | [@eriqande](https://github.com/eriqande) |
+| [Tourmaline](https://github.com/aomlomics/tourmaline)| [cloud](/GoogleCloud/tourmaline) and [on prem](/sedna/tourmaline) | Workflow to conduct DNA metabarcoding with Illumina sequencing amplicon data using Qiime2 | DNA metabarcoding data from 1014 eDNA collected from the Gulf of Alaska (GoA) amplified using 12S rRNA targeted Illumina short read sequencing | [@lukenoaa](https://github.com/lukenoaa) |
+| [Amethyst](https://github.com/aomlomics/amethyst)| [cloud](/GoogleCloud/amethyst) and [on prem](/sedna/amethyst) | Workflow to conduct metagenomic analysis using whole genome shotgun sequencing with Illumina data, and is used to characterize microbial communities in an environmental sample. | 88 seawater metagenomes from the North Pacific, Southern California, and Florida, collected as part of the [Bio-GO-SHIP](https://biogoship.org/) project and sequenced using Illumina short reads. | [@lukenoaa](https://github.com/lukenoaa) |
+| [Trinity](https://github.com/trinityrnaseq/trinityrnaseq)| [cloud](/GoogleCloud/trinity) and [on prem](/sedna/trinity) | Raw read trimming and denovo transcriptome assembly | 20 Illumina short read steelhead trout RNA samples| [@trinityrnaseq](https://github.com/trinityrnaseq)|
 
 
 # Disclaimer
