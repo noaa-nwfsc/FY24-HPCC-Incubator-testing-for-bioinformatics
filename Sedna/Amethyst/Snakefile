@@ -1,0 +1,449 @@
+# Grab a list of all the samples
+# Assumes all the file names have the format R[12]_{sample}_R[12].fastq
+import glob
+import re
+
+pattern = re.compile(r'00_data/fastq/R1/(.*)_R1.fastq')
+files = glob.glob('00_data/fastq/R1/*.fastq')
+
+SAMPLES = []
+for file in files:
+    match = pattern.match(file)
+    if match:
+        SAMPLES.append(match.group(1))
+
+# Master rule that snakemake uses to determine which files need to be 
+# generated.
+rule all:
+    input:
+        expand("00_data/fastq/fastqc-R1/{sample}_R1_fastqc.html", 
+            sample=SAMPLES),
+        expand("00_data/fastq/fastqc-R2/{sample}_R2_fastqc.html", 
+            sample=SAMPLES),
+        "00_data/fastq/fastqc-R1/multiqc_report.html",
+        "00_data/fastq/fastqc-R2/multiqc_report.html",
+        expand("01_qc/trimmed_reads/test/{sample}_1.fq", sample=SAMPLES),
+        expand("01_qc/trimmed_reads/test/{sample}_2.fq", sample=SAMPLES),
+        expand("02_assembly/{sample}/{sample}.contigs.fa", sample=SAMPLES),
+        expand("02_assembly/{sample}.1.bt2", sample=SAMPLES),
+        expand("02_assembly/{sample}.2.bt2", sample=SAMPLES),
+        expand("02_assembly/{sample}.3.bt2", sample=SAMPLES),
+        expand("02_assembly/{sample}.4.bt2", sample=SAMPLES),
+        expand("02_assembly/{sample}.rev.1.bt2", sample=SAMPLES),
+        expand("02_assembly/{sample}.rev.2.bt2", sample=SAMPLES),
+        expand("02_assembly/{sample}/{sample}.sam", sample=SAMPLES),
+        expand("02_assembly/{sample}/prodigal/{sample}_contig_cords.gbk", 
+            sample=SAMPLES),
+        expand("02_assembly/{sample}/prodigal/{sample}_contig_orfs.faa", 
+            sample=SAMPLES),
+        expand("02_assembly/{sample}/prodigal/{sample}_contig_orfs.fna", 
+            sample=SAMPLES),
+        expand("01_qc/interleaved/{sample}_interleaved.fq", sample=SAMPLES),
+        expand("02_assembly/sourmash/tax_out/{sample}_reads.sig", 
+            sample=SAMPLES),
+        expand("02_assembly/sourmash/tax_out/{sample}_sourmash_gather_out.csv",
+            sample=SAMPLES),
+        expand("02_assembly/{sample}_MaxBin.abundance", sample=SAMPLES),
+        "02_assembly/checkm/results/checkm.log",
+        "02_assembly/dRep_out/log/logger.log",
+        "03_assignment/GTDBtk/gtdbtk.log",
+        "03_assignment/GTDBtk/mashoutput.msh"
+
+# Run all the samples through FastQC 
+rule fastqc: 
+    conda: 
+        "mg-qc"
+    input:
+        r1 = "00_data/fastq/R1/{sample}_R1.fastq",
+        r2 = "00_data/fastq/R2/{sample}_R2.fastq"
+    output:
+        o1 = "00_data/fastq/fastqc-R1/{sample}_R1_fastqc.html", 
+        o2 = "00_data/fastq/fastqc-R2/{sample}_R2_fastqc.html"
+    params:
+        outfolder1 = "00_data/fastq/fastqc-R1",
+        outfolder2 = "00_data/fastq/fastqc-R2"
+    threads: 5 
+    log:
+        "logs/fastqc/{sample}.log"
+    benchmark:
+        "benchmarks/fastqc/{sample}.txt"
+    shell:
+        """
+        fastqc -t {threads} -o {params.outfolder1} {input.r1} &> {log}
+        fastqc -t {threads} -o {params.outfolder2} {input.r2} &>> {log}
+        """
+
+# Run MultiQC on the FastQC reports
+# All wildcards used in a rule must match to wildcards in the output: block
+rule multiqc:
+    conda:
+        "mg-qc"
+    input:
+        expand("00_data/fastq/fastqc-R1/{sample}_R1_fastqc.html", 
+            sample=SAMPLES),
+        expand("00_data/fastq/fastqc-R2/{sample}_R2_fastqc.html", 
+            sample=SAMPLES)
+    output:
+        "00_data/fastq/fastqc-R1/multiqc_report.html",
+        "00_data/fastq/fastqc-R2/multiqc_report.html"
+    params:
+        of1 = "00_data/fastq/fastqc-R1",
+        of2 = "00_data/fastq/fastqc-R2"
+    log:
+        "logs/multiqc/multiqc.log"
+    benchmark:
+        "benchmarks/multiqc/multiqc.txt"
+    shell:
+        """
+        multiqc -f --export -o {params.of1} {params.of1} &> {log}
+        multiqc -f --export -o {params.of2} {params.of2} &>> {log}
+        """
+
+# Running fastp - trimming the raw reads
+rule fastp:
+    conda:
+        "multitrim"
+    input:
+        r1 = "00_data/fastq/R1/{sample}_R1.fastq",
+        r2 = "00_data/fastq/R2/{sample}_R2.fastq"
+    output:
+        o1 = "01_qc/trimmed_reads/test/{sample}_1.fq",
+        o2 = "01_qc/trimmed_reads/test/{sample}_2.fq",
+        o3 = "01_qc/trimmed_reads/test/{sample}_test_report.html",
+        o4 = "01_qc/trimmed_reads/test/{sample}_test_report.json"
+    threads: 5
+    log:
+        "logs/fastp/{sample}.log"
+    benchmark:
+        "benchmarks/fastp/{sample}.txt"
+    shell:
+        """
+        fastp \
+            -i {input.r1} \
+            -o {output.o1} \
+            -I {input.r2} \
+            -O {output.o2} \
+            --detect_adapter_for_pe \
+            -g -l 50 -W 4 -M 20 \
+            -w {threads} \
+            --cut_front \
+            -h {output.o3} \
+            -j {output.o4} \
+            &> {log}
+        """
+
+# Megahit
+rule megahit:
+    conda:
+        "mg-assembly"
+    input:
+        r1 = "01_qc/trimmed_reads/test/{sample}_1.fq",
+        r2 = "01_qc/trimmed_reads/test/{sample}_2.fq"
+    output:
+        o1 = "02_assembly/{sample}/{sample}.contigs.fa"
+    params:
+        r1 = "02_assembly/{sample}_R1.fq",
+        r2 = "02_assembly/{sample}_R2.fq",
+        outfolder = "02_assembly/{sample}",
+        prefix = "{sample}"
+    threads: 20
+    log:
+        "logs/megahit/{sample}.log"
+    benchmark:
+        "benchmarks/megahit/{sample}.txt"
+    shell:
+        """
+        rm -rf {params.outfolder}
+        cat {input.r1} > {params.r1}
+        cat {input.r2} > {params.r2}
+        megahit -1 {params.r1} -2 {params.r2} -m 0.85 -t {threads} \
+            --min-contig-len 20 --out-prefix {params.prefix} \
+            --k-min 21 --k-max 21 \
+            -o {params.outfolder} \
+            &> {log}
+        rm {params.r1} {params.r2}
+        """
+
+# Build bowtie2 reference database
+rule bbdb:
+    conda:
+        "mg-binning"
+    input:
+        seq = "02_assembly/{sample}/{sample}.contigs.fa"
+    output:
+        o1 = "02_assembly/{sample}.1.bt2",
+        o2 = "02_assembly/{sample}.2.bt2",
+        o3 = "02_assembly/{sample}.3.bt2",
+        o4 = "02_assembly/{sample}.4.bt2",
+        o5 = "02_assembly/{sample}.rev.1.bt2",
+        o6 = "02_assembly/{sample}.rev.2.bt2"
+    params:
+        basename="02_assembly/{sample}"
+    threads: 20
+    log:
+        "logs/bbmap/{sample}.bowtie2-build.log"
+    benchmark:
+        "benchmarks/bbmap/{sample}.txt"
+    shell:
+        """
+        bowtie2-build \
+            --threads {threads} \
+            {input.seq} \
+            {params.basename} \
+            &> {log}
+        """
+
+# bowtie2 - generate SAM file
+rule bbmap:
+    conda:
+        "mg-binning"
+    input:
+        r1 = "01_qc/trimmed_reads/test/{sample}_1.fq",
+        r2 = "01_qc/trimmed_reads/test/{sample}_2.fq",
+        o1 = "02_assembly/{sample}.1.bt2",
+        o2 = "02_assembly/{sample}.2.bt2",
+        o3 = "02_assembly/{sample}.3.bt2",
+        o4 = "02_assembly/{sample}.4.bt2",
+        o5 = "02_assembly/{sample}.rev.1.bt2",
+        o6 = "02_assembly/{sample}.rev.2.bt2"
+    output:
+        o1 = "02_assembly/{sample}/{sample}.sam",
+    params:
+        o2 = "02_assembly/{sample}"
+    threads: 20 
+    log:
+        "logs/bbmap/{sample}.bowtie2.log"
+    benchmark:
+        "benchmarks/bbmap/{sample}.bowtie2.txt"
+    shell:
+        """
+        bowtie2 \
+            --threads {threads} \
+            -x {params.o2} \
+            -1 {input.r1} \
+            -2 {input.r2} \
+            -S {output.o1} \
+            &> {log}
+        """
+
+# Prodigal
+# Not multithreaded
+rule prodigal:
+    conda:
+        "mg-assembly"
+    input:
+        r1 = "02_assembly/{sample}/{sample}.contigs.fa"
+    output:
+        o1 = "02_assembly/{sample}/prodigal/{sample}_contig_cords.gbk",
+        o2 = "02_assembly/{sample}/prodigal/{sample}_contig_orfs.faa",
+        o3 = "02_assembly/{sample}/prodigal/{sample}_contig_orfs.fna"
+    threads: 20
+    log:
+        "logs/prodigal/{sample}.log"
+    benchmark:
+        "benchmarks/prodigal/{sample}.txt"
+    shell:
+        """
+        prodigal \
+            -i {input.r1} \
+            -o {output.o1} \
+            -a {output.o2} \
+            -d {output.o3} \
+            &> {log}
+        """
+
+# Java program, can't set number of CPUs but seems to use more than one (GC?)
+rule interleave:
+    conda:
+        "mg-diversity"
+    input:
+        r1 = "01_qc/trimmed_reads/test/{sample}_1.fq",
+        r2 = "01_qc/trimmed_reads/test/{sample}_2.fq",
+    output:
+        o1 = "01_qc/interleaved/{sample}_interleaved.fq",
+    threads: 5
+    log:
+        "logs/bbint/{sample}.log"
+    benchmark:
+        "benchmarks/bbint/{sample}.txt"
+    shell:
+        """
+       ./bbmap/reformat.sh \
+            in1={input.r1} \
+            in2={input.r2} \
+            out={output.o1} \
+            &> {log}
+        """
+
+# By default, 'sketch dna' uses the parameter string 'k=31,scaled=1000,noabund'.
+# Should only need to run sourmash tax metagenome once and set multiple
+# output formats.
+# https://github.com/sourmash-bio/sourmash_plugin_branchwater
+rule sourmash:
+    conda:
+        "mg-diversity"
+    input:
+        o1 = "01_qc/interleaved/{sample}_interleaved.fq"
+    output:
+        o2 = "02_assembly/sourmash/tax_out/{sample}_reads.sig",
+        o3 = "02_assembly/sourmash/tax_out/{sample}_sourmash_gather_out.csv",
+    params:
+        outfolder2 = "02_assembly/sourmash/tax_out/{sample}",
+        db = "./dbs/gtdb-rs202.genomic-reps.k31.zip"
+    threads: 20
+    log:
+        "logs/sourmash/{sample}.log"
+    benchmark:
+        "benchmarks/sourmash/{sample}.txt"
+    shell:
+        """
+        sourmash sketch dna \
+            {input.o1} \
+            -o {output.o2} \
+            &> {log}
+        sourmash gather \
+            {output.o2} \
+            {params.db} \
+            -o {output.o3} \
+            --ignore-abundance \
+            &>> {log}
+        sourmash tax metagenome \
+            -g {output.o3} \
+            -t ./dbs/gtdb-rs202.taxonomy.v2.csv \
+            -o {params.outfolder2} \
+            --output-format csv_summary \
+            --force \
+            &>> {log}
+        sourmash tax metagenome \
+            -g {output.o3} \
+            -t ./dbs/gtdb-rs202.taxonomy.v2.csv \
+            -o {params.outfolder2} \
+            --output-format krona \
+            --rank family \
+            --force \
+            &>> {log}
+        """
+
+# Step takes a while?
+rule maxbin2:
+    conda:
+        "mg-binning2"
+    input:
+        r1 = "02_assembly/{sample}/{sample}.contigs.fa",
+        r2 = "01_qc/trimmed_reads/test/{sample}_1.fq",
+        r3 = "01_qc/trimmed_reads/test/{sample}_2.fq"
+    output:
+        o2 = "02_assembly/{sample}_MaxBin.abundance"
+    params:
+        outfolder = "02_assembly/{sample}_MaxBin"
+    threads: 20
+    log:
+        "logs/maxbin/{sample}.log"
+    benchmark:
+        "benchmarks/maxbin/{sample}.txt"
+    shell:
+        """
+        run_MaxBin.pl \
+            -contig {input.r1} \
+            -min_contig_length 100 \
+            -reads {input.r2} \
+            -reads2 {input.r3} \
+            -out {params.outfolder} \
+            -thread {threads} \
+            -max_iteration 20 \
+            &> {log}
+        """
+
+# Possible to add more threads using -t and --pplacer_threads
+rule checkm:
+    conda:
+        "checkm"
+    input:
+        r1 = "00_data/fastq/fastqc-R1/multiqc_report.html"
+    output:
+        o2 = "02_assembly/checkm/results/checkm.log"
+    params:
+        outfolder = "02_assembly/checkm",
+        outfolder2 = "02_assembly/checkm/results"
+    threads: 20
+    log:
+        "logs/checkm/checkm.log"
+    benchmark:
+        "benchmarks/checkm/checkm.txt"
+    shell:
+        """
+        export CHECKM_DATA_PATH=./dbs/
+        cp -n 02_assembly/*/*.contigs.fa 02_assembly/checkm
+        test -f {output.o2} && 2>&1 || \
+            checkm lineage_wf \
+            -x fa {params.outfolder} \
+            {params.outfolder2} \
+            -t {threads} \
+            --pplacer_threads {threads} \
+            &> {log}
+        """
+
+rule dRep:
+    conda:
+        "mg-binning3"
+    input:
+        r1 = "README.md"
+    output:
+        o1 = "02_assembly/dRep_out/log/logger.log"
+    params:
+        infolder = "02_assembly/dRep_data",
+        outfolder = "02_assembly/dRep_out"
+    threads: 20
+    log:
+        "logs/dRep/dRep.log"
+    benchmark:
+        "benchmarks/dRep/dRep.txt"
+    shell:
+        """
+        if [ -d "{params.infolder}" ]; then
+            rm -rf "{params.infolder}"
+        fi
+        if [ -d "{params.outfolder}" ]; then
+            rm -rf "{params.outfolder}"
+        fi
+        mkdir -p "{params.infolder}"
+        mkdir -p "{params.outfolder}"
+        cp 02_assembly/*.fasta "{params.infolder}"
+        test -f "{output.o1}" && 2>&1 || \
+            dRep dereplicate "{params.outfolder}" \
+            -g 02_assembly/dRep_data/*.fasta \
+            --ignoreGenomeQuality \
+            --SkipSecondary \
+            -p {threads} \
+            &> {log}
+        """
+
+# Can increase cpu-usage using --cpus #
+rule GTDBtk:
+    conda:
+        "mg-binning3"
+    input:
+        r1 = "logs/dRep/dRep.log"
+    output:
+        o2 = "03_assignment/GTDBtk/gtdbtk.log",
+        o3 = "03_assignment/GTDBtk/mashoutput.msh"
+    params:
+        o1 = directory("03_assignment/GTDBtk"),
+        i1 = "02_assembly/dRep_data/"
+    threads: 20
+    log:
+        "logs/GTDBtk/gtdb.log"
+    benchmark:
+        "benchmarks/GTDBtk/bm.txt"
+    shell:
+        """
+        mkdir -p 03_assignment/
+        mkdir -p 03_assignment/GTDBtk
+        gtdbtk classify_wf \
+            --mash_db 03_assignment/GTDBtk/mashoutput.msh \
+            --genome_dir {params.i1} \
+            --out_dir {params.o1} \
+            --extension fasta \
+            --cpus {threads} --pplacer_cpus {threads} \
+            &> {log}
+        """
