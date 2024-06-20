@@ -1,0 +1,36 @@
+import glob
+import re
+
+files_R1 = glob.glob('raw/*.R1.fq.gz')
+files_R2 = glob.glob('raw/*.R2.fq.gz')
+files_R1_str = ','.join(files_R1)
+files_R2_str = ','.join(files_R2)
+
+adapter_file = "/share/nwfsc/ggoetz/202310-terra_gcp-trinity/TruSeq3-PE-2.fa"
+trim_string = ("ILLUMINACLIP:" + adapter_file +
+    ":2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:20 MINLEN:50")
+
+rule trinity:
+    conda:
+        "trinity-2.15.1"
+    output:
+        "trinity/trinity.all.Trinity.fasta",
+        "trinity/trinity.all.Trinity.fasta.gene_trans_map" 
+    threads: 20
+    log:
+        "logs/trinity.log"
+    benchmark:
+        "benchmarks/trinity.txt"
+    shell:
+        """
+        Trinity \
+            --seqType fq \
+            --trimmomatic \
+            --quality_trimming_params "{trim_string}" \
+            --CPU {threads} \
+            --output trinity/trinity.all \
+            --max_memory 500G \
+            --left {files_R1_str} \
+            --right {files_R2_str} \
+            &> {log} 
+        """
