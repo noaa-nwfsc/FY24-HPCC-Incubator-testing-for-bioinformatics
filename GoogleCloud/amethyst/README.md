@@ -1,0 +1,3 @@
+## Running Ametheyst on Google Cloud
+Our team initially benchmarked Amethyst using the Life Sciences API in VWB, but the dependence on creating multiple conda environments made this implementation difficult due to software version conflicts. After many hours of troubleshooting, our team ended up benchmarking Amethyst using a single n2-standard-30 virtual machine within a VWB environment. This machine has 32 CPUs and 128 GB of RAM with Intel Ice Lake or Cascade Lake processors. Due to slow runtimes (6+ hours for MaxBin step) and high memory requirements, our team limited our benchmarking of Amethyst to five samples. This pipeline was still in development during our benchmarking, so the level of effort was high to get it running end to end. 
+

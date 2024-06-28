@@ -1,0 +1,4 @@
+## Running Trinity on Google Cloud
+
+Our Trinity workflow ran from a single Trinity command which included quality trimming using trimmomatic and subsequent transcriptome assembly. Our team tested Trinity only using our SLURM environment on Google Cloud submitting to a single compute node. Our team benchmarked Trinity v. 2.15.1, with Snakemake v.8.12.0. Trinity performs best when given all files to work with at once rather than running one by one. Although runtimes are longer as you add samples, Trinity has several steps that are not longer with more samples, meaning our team could not get a per-sample estimate simply by dividing runtime by number of samples. Although our team requested a single node with 30 CPUs, our job only used 20 CPUs and 200 GB RAM to maintain parity with Sedna resources.
+

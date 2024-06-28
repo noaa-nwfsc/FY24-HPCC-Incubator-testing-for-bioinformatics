@@ -28,6 +28,10 @@ Detailed documentation of required storage space, processing power, and time spe
 | [Amethyst](https://github.com/aomlomics/amethyst)| [cloud](/GoogleCloud/amethyst) and [on prem](/Sedna/amethyst) | Workflow to conduct metagenomic analysis using whole genome shotgun sequencing with Illumina data, and is used to characterize microbial communities in an environmental sample. | 88 seawater metagenomes from the North Pacific, Southern California, and Florida, collected as part of the [Bio-GO-SHIP](https://biogoship.org/) project and sequenced using Illumina short reads. | [@lukenoaa](https://github.com/lukenoaa) |
 | [Trinity](https://github.com/trinityrnaseq/trinityrnaseq)| [cloud](/GoogleCloud/trinity) and [on prem](/Sedna/trinity) | Raw read trimming and denovo transcriptome assembly | 20 Illumina short read steelhead trout RNA samples| [@trinityrnaseq](https://github.com/trinityrnaseq)|
 
+To run each of these workflows in your own environment, you can access any files that we modified within the respective folders, otherwise you can clone the repos directly from the developers and then plug in any files we modified that are hosted in this repo. 
+
+## SLURM scripts
+All files needed to replicate our slurm cluster are found within [this slurm folder](/slurm-tf/), based on [hpc-toolkit](https://github.com/GoogleCloudPlatform/hpc-toolkit).
 
 # Disclaimer
 
