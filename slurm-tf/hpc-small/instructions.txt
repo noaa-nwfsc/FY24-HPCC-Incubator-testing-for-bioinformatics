@@ -1,0 +1,23 @@
+Advanced Deployment Instructions
+================================
+
+Terraform group 'primary' was successfully created in directory hpc-small/primary
+To deploy, run the following commands:
+
+terraform -chdir=hpc-small/primary init
+terraform -chdir=hpc-small/primary validate
+terraform -chdir=hpc-small/primary apply
+
+Destroying infrastructure when no longer needed
+===============================================
+
+Automated
+---------
+
+ghpc destroy hpc-small
+
+Advanced / Manual
+-----------------
+Infrastructure should be destroyed in reverse order of creation:
+
+terraform -chdir=hpc-small/primary destroy
