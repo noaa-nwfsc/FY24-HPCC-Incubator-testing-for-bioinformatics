@@ -1,0 +1,48 @@
+#!/bin/bash
+
+#SBATCH --job-name=Trinity
+#SBATCH -c 30
+#SBATCH --mem=200G
+#SBATCH -t 0
+#SBATCH --mail-type=ALL
+
+#SBATCH -p compute
+#SBATCH --nodelist=hpcsmall-compute-ghpc-19
+
+# so we can use conda with the scheduler
+source ~/.bashrc
+
+# load the trinity environment
+mamba activate trinity-2.15.1
+
+VER=1
+
+# Setup
+BASE=/home/giles_goetz_noaa_gov/testing/trinity
+IN=${BASE}/raw
+OUT=${BASE}/trinity/trinity.all.v${VER}
+
+ADAPTER_FILE=${BASE}/TruSeq3-PE-2.fa
+TRIM_STRING="ILLUMINACLIP:${ADAPTER_FILE}"
+TRIM_STRING+=":2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:20 MINLEN:50"
+
+if [ ! -d ${OUT} ]; then
+    mkdir -p ${OUT}
+fi
+
+# Get a list of the files, only using the paired trimmed ones
+FILES_R1=$(ls ${IN}/*.R1.fq.gz | tr '\n' ',' | sed -e 's/,$//')
+FILES_R2=$(ls ${IN}/*.R2.fq.gz | tr '\n' ',' | sed -e 's/,$//')
+
+# Running Trinity, setting a really high memory limit since
+# we don't know how much it is going to use.
+Trinity \
+    --seqType fq \
+    --CPU 20 \
+    --output ${OUT} \
+    --max_memory 200G \
+    --left ${FILES_R1} \
+    --right ${FILES_R2} \
+    --trimmomatic \
+    --quality_trimming_params "${TRIM_STRING}" \
+    &> ${OUT}/trinity.v${VER}.log
